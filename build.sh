@@ -1,10 +1,26 @@
 #!/bin/bash
 
-HASH="${1}"
-if [ -z "${HASH}" ]; then
-    HASH="$(git ls-remote https://github.com/project-chip/connectedhomeip.git refs/heads/master | awk 'NR==1 {print $1}')"
+PRUNE=0
+POSITIONAL=()
+for arg in "$@"; do
+    case "$arg" in
+        --prune) PRUNE=1 ;;
+        *) POSITIONAL+=("$arg") ;;
+    esac
+done
+set -- "${POSITIONAL[@]}"
+
+BRANCH_OR_HASH="${1}"
+if [ -z "${BRANCH_OR_HASH}" ]; then
+    BRANCH_OR_HASH="master"
+fi
+
+if echo "${BRANCH_OR_HASH}" | grep -qE '^[0-9a-f]{40}$'; then
+    HASH="${BRANCH_OR_HASH}"
+else
+    HASH="$(git ls-remote https://github.com/project-chip/connectedhomeip.git "refs/heads/${BRANCH_OR_HASH}" | awk 'NR==1 {print $1}')"
     if [ -z "${HASH}" ]; then
-        echo "Failed to resolve master commit hash from project-chip/connectedhomeip." >&2
+        echo "Failed to resolve commit hash for branch '${BRANCH_OR_HASH}' from project-chip/connectedhomeip." >&2
         exit 1
     fi
 fi
@@ -13,7 +29,10 @@ if [ ! -f Dockerfile ]; then
     wget "https://raw.githubusercontent.com/project-chip/connectedhomeip/${HASH}/integrations/docker/images/chip-cert-bins/Dockerfile"
     DOCKERFILE_DOWNLOADED=1
 fi
-docker system prune --all --volumes --force
+if [ $PRUNE -eq 1 ]; then
+    docker system prune --all --volumes --force
+fi
+echo "Building commit ${HASH}"
 docker buildx build --load --build-arg COMMITHASH=${HASH} --tag connectedhomeip/chip-cert-bins:${HASH} .
 if [ $DOCKERFILE_DOWNLOADED -eq 1 ]; then
     rm Dockerfile

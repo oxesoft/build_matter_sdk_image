@@ -1,20 +1,27 @@
 param(
     [Parameter(Position = 0)]
-    [string]$Hash
+    [string]$BranchOrHash,
+    [switch]$Prune
 )
 
 $ErrorActionPreference = "Stop"
 
-if ([string]::IsNullOrWhiteSpace($Hash)) {
-    $remoteLine = git ls-remote https://github.com/project-chip/connectedhomeip.git refs/heads/master
+if ([string]::IsNullOrWhiteSpace($BranchOrHash)) {
+    $BranchOrHash = "master"
+}
+
+if ($BranchOrHash -match '^[0-9a-f]{40}$') {
+    $Hash = $BranchOrHash
+} else {
+    $remoteLine = git ls-remote https://github.com/project-chip/connectedhomeip.git "refs/heads/$BranchOrHash"
     if ([string]::IsNullOrWhiteSpace($remoteLine)) {
-        Write-Error "Failed to resolve master commit hash from project-chip/connectedhomeip."
+        Write-Error "Failed to resolve commit hash for branch '$BranchOrHash' from project-chip/connectedhomeip."
         exit 1
     }
 
     $Hash = ($remoteLine -split "\s+")[0]
     if ([string]::IsNullOrWhiteSpace($Hash)) {
-        Write-Error "Failed to parse master commit hash from git ls-remote output."
+        Write-Error "Failed to parse commit hash from git ls-remote output."
         exit 1
     }
 }
@@ -26,7 +33,10 @@ if (-not (Test-Path -Path "Dockerfile" -PathType Leaf)) {
     $dockerfileDownloaded = $true
 }
 
-docker system prune --all --volumes --force
+if ($Prune) {
+    docker system prune --all --volumes --force
+}
+Write-Host "Building commit $Hash"
 docker buildx build --load --build-arg "COMMITHASH=$Hash" --tag "connectedhomeip/chip-cert-bins:$Hash" .
 
 if ($dockerfileDownloaded) {
