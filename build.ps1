@@ -1,7 +1,8 @@
 param(
     [Parameter(Position = 0)]
     [string]$BranchOrHash,
-    [switch]$Prune
+    [switch]$Prune,
+    [switch]$Save
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,4 +44,6 @@ if ($dockerfileDownloaded) {
     Remove-Item -Path "Dockerfile" -Force
 }
 
-docker save --output "chip-cert-bins_${Hash}.tar" "connectedhomeip/chip-cert-bins:$Hash"
+if ($Save) {
+    docker save --output "chip-cert-bins_${Hash}.tar" "connectedhomeip/chip-cert-bins:$Hash"
+}

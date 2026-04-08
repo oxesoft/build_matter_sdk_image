@@ -1,10 +1,12 @@
 #!/bin/bash
 
 PRUNE=0
+SAVE=0
 POSITIONAL=()
 for arg in "$@"; do
     case "$arg" in
         --prune) PRUNE=1 ;;
+        --save) SAVE=1 ;;
         *) POSITIONAL+=("$arg") ;;
     esac
 done
@@ -37,4 +39,6 @@ docker buildx build --load --build-arg COMMITHASH=${HASH} --tag connectedhomeip/
 if [ $DOCKERFILE_DOWNLOADED -eq 1 ]; then
     rm Dockerfile
 fi
-docker save --output chip-cert-bins_${HASH}.tar connectedhomeip/chip-cert-bins:${HASH}
+if [ $SAVE -eq 1 ]; then
+    docker save --output chip-cert-bins_${HASH}.tar connectedhomeip/chip-cert-bins:${HASH}
+fi
