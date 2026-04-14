@@ -2,11 +2,13 @@
 
 PRUNE=0
 SAVE=0
+GITHUB_USER="project-chip"
 POSITIONAL=()
 for arg in "$@"; do
     case "$arg" in
         --prune) PRUNE=1 ;;
         --save) SAVE=1 ;;
+        --github-user=*) GITHUB_USER="${arg#--github-user=}" ;;
         *) POSITIONAL+=("$arg") ;;
     esac
 done
@@ -20,15 +22,15 @@ fi
 if echo "${BRANCH_OR_HASH}" | grep -qE '^[0-9a-f]{40}$'; then
     HASH="${BRANCH_OR_HASH}"
 else
-    HASH="$(git ls-remote https://github.com/project-chip/connectedhomeip.git "refs/heads/${BRANCH_OR_HASH}" | awk 'NR==1 {print $1}')"
+    HASH="$(git ls-remote https://github.com/${GITHUB_USER}/connectedhomeip.git "refs/heads/${BRANCH_OR_HASH}" | awk 'NR==1 {print $1}')"
     if [ -z "${HASH}" ]; then
-        echo "Failed to resolve commit hash for branch '${BRANCH_OR_HASH}' from project-chip/connectedhomeip." >&2
+        echo "Failed to resolve commit hash for branch '${BRANCH_OR_HASH}' from ${GITHUB_USER}/connectedhomeip." >&2
         exit 1
     fi
 fi
 DOCKERFILE_DOWNLOADED=0
 if [ ! -f Dockerfile ]; then
-    wget "https://raw.githubusercontent.com/project-chip/connectedhomeip/${HASH}/integrations/docker/images/chip-cert-bins/Dockerfile"
+    wget "https://raw.githubusercontent.com/${GITHUB_USER}/connectedhomeip/${HASH}/integrations/docker/images/chip-cert-bins/Dockerfile"
     DOCKERFILE_DOWNLOADED=1
 fi
 if [ $PRUNE -eq 1 ]; then
