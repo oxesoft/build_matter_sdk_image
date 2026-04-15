@@ -33,6 +33,7 @@ if [ ! -f Dockerfile ]; then
     wget "https://raw.githubusercontent.com/${GITHUB_USER}/connectedhomeip/${HASH}/integrations/docker/images/chip-cert-bins/Dockerfile"
     DOCKERFILE_DOWNLOADED=1
 fi
+sed -i "s/project-chip/${GITHUB_USER}/g" Dockerfile
 if [ $PRUNE -eq 1 ]; then
     docker system prune --all --volumes --force
 fi
