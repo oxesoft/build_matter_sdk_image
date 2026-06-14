@@ -100,7 +100,7 @@ if [ $SETUP_STATUS -eq 0 ]; then
     echo "Starting Matter SDK Build..." | tee -a "${LOG_FILE}"
     gcloud compute ssh "${VM_NAME}" --zone="${ZONE}" --command="
       echo '=== Starting Matter SDK Build ===' &&
-      sg docker -c 'cd build_matter_sdk_image && ./build.sh ${HASH} --save'
+      cd build_matter_sdk_image && ./build.sh ${HASH} --save
     " 2>&1 | tee -a "${LOG_FILE}"
     BUILD_STATUS=$?
 else
