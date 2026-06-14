@@ -14,6 +14,10 @@ IMAGE_PROJECT="ubuntu-os-cloud"
 DISK_SIZE="200GB"
 DISK_TYPE="hyperdisk-balanced"
 
+# Logging
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+LOG_FILE="build_${TIMESTAMP}.log"
+
 # Usage check
 BRANCH_OR_HASH="${1}"
 if [ -z "${BRANCH_OR_HASH}" ]; then
@@ -82,25 +86,25 @@ gcloud compute ssh "${VM_NAME}" --zone="${ZONE}" --command="
     rm -rf build_matter_sdk_image
   fi &&
   git clone https://github.com/oxesoft/build_matter_sdk_image.git
-" 2>&1 | tee build.log
+" 2>&1 | tee "${LOG_FILE}"
 SETUP_STATUS=$?
 
 if [ $SETUP_STATUS -eq 0 ]; then
     # Upload Dockerfile if it exists locally
     if [ -f Dockerfile ]; then
-        echo "Local Dockerfile found. Uploading to VM..." | tee -a build.log
-        gcloud compute scp Dockerfile "${VM_NAME}:~/build_matter_sdk_image/" --zone="${ZONE}" 2>&1 | tee -a build.log
+        echo "Local Dockerfile found. Uploading to VM..." | tee -a "${LOG_FILE}"
+        gcloud compute scp Dockerfile "${VM_NAME}:~/build_matter_sdk_image/" --zone="${ZONE}" 2>&1 | tee -a "${LOG_FILE}"
     fi
 
     # Start build on VM
-    echo "Starting Matter SDK Build..." | tee -a build.log
+    echo "Starting Matter SDK Build..." | tee -a "${LOG_FILE}"
     gcloud compute ssh "${VM_NAME}" --zone="${ZONE}" --command="
       echo '=== Starting Matter SDK Build ===' &&
       sg docker -c 'cd build_matter_sdk_image && ./build.sh ${HASH} --save'
-    " 2>&1 | tee -a build.log
+    " 2>&1 | tee -a "${LOG_FILE}"
     BUILD_STATUS=$?
 else
-    echo "Error: Remote setup failed." >&2 | tee -a build.log
+    echo "Error: Remote setup failed." >&2 | tee -a "${LOG_FILE}"
     BUILD_STATUS=1
 fi
 
@@ -119,6 +123,6 @@ gcloud compute instances delete "${VM_NAME}" --zone="${ZONE}" --delete-disks=all
 if [ $BUILD_STATUS -eq 0 ]; then
     echo "Workflow completed successfully!"
 else
-    echo "Workflow finished, but build failed. Check build.log for details." >&2
+    echo "Workflow finished, but build failed. Check ${LOG_FILE} for details." >&2
     exit $BUILD_STATUS
 fi
