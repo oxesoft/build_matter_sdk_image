@@ -4,8 +4,8 @@
 ### https://cloud.google.com/spot-vms/pricing
 ```
 gcloud compute instances create matter-vm \
-    --zone=us-central1-a \
-    --machine-type=c4a-standard-32 \
+    --zone=us-central1-c \
+    --machine-type=c4a-standard-16 \
     --provisioning-model=SPOT \
     --image-family=ubuntu-2204-lts-arm64 \
     --image-project=ubuntu-os-cloud \
@@ -14,11 +14,13 @@ gcloud compute instances create matter-vm \
 ```
 
 ## [Optional] Add your public key to the instance to avoid creating a new one every time
-gcloud compute ssh matter-vm --zone=us-central1-a --ssh-key-file=~/.ssh/id_rsa
+```
+gcloud compute ssh matter-vm --zone=us-central1-c --ssh-key-file=~/.ssh/id_rsa
+```
 
 ## Connect via ssh
 ```
-gcloud compute ssh matter-vm --zone=us-central1-a
+gcloud compute ssh matter-vm --zone=us-central1-c
 ```
 
 ## Install Docker
@@ -39,7 +41,7 @@ git clone https://github.com/oxesoft/build_matter_sdk_image.git
 
 ## [Optional] Send the desired Dockerfile to the instance
 ```
-gcloud compute scp Dockerfile matter-vm:~/build_matter_sdk_image/ --zone=us-central1-a
+gcloud compute scp Dockerfile matter-vm:~/build_matter_sdk_image/ --zone=us-central1-c
 ```
 
 ## [Optional] Start a tmux session
@@ -63,16 +65,16 @@ tmux attach -t matter-build
 
 ## Download the resulting files to the local machine
 ```
-gcloud compute scp matter-vm:~/build_matter_sdk_image/chip-cert-bins_COMMIT_HASH.tar . --zone=us-central1-a
-gcloud compute scp matter-vm:~/build_matter_sdk_image/build.log . --zone=us-central1-a
+gcloud compute scp matter-vm:~/build_matter_sdk_image/chip-cert-bins_COMMIT_HASH.tar . --zone=us-central1-c
+gcloud compute scp matter-vm:~/build_matter_sdk_image/build.log . --zone=us-central1-c
 ```
 
 ## Shut down the machine
 ```
-sudo poweroff
+gcloud compute instances stop matter-vm --zone=us-central1-c --quiet
 ```
 
 ## Delete the instance
 ```
-gcloud compute instances delete matter-vm --zone=us-central1-a --delete-disks=all
+gcloud compute instances delete matter-vm --zone=us-central1-c --delete-disks=all
 ```
