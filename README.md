@@ -8,3 +8,7 @@ There are two scripts that perform this same workflow on different platforms:
 
 - `build.sh` for POSIX shells.
 - `build.ps1` for Windows PowerShell.
+
+## Claude Code skills
+
+- `.claude/skills/release-branch-cherry-pick` — cherry-picks pending commits between `certification-tool` release branches, resolving the backend/cli/frontend submodule conflicts that arise when the same PR is cherry-picked into more than one release line.
